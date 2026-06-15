@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de XP</title>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        background: #121212;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+    }
+
+    .xp-bar {
+        width: 100%;
+        height: 30px;
+        background: #2a2a2a;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .xp-fill {
+        height: 100%;
+        width: 0%;
+        background: #4caf50;
+    }
+
+    .xp-text {
+        margin-top: 10px;
+        font-size: 18px;
+    }
+
+    .buttons {
+        margin-top: 25px;
+        display: grid;
+        gap: 10px;
+    }
+
+    button {
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #2f2f2f;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    button:hover {
+        background: #444;
+    }
+
+    .danger {
+        background: #8b2c2c;
+    }
+
+    .danger:hover {
+        background: #b33b3b;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1 id="level">Nível 0</h1>
+
+    <div class="xp-bar">
+        <div class="xp-fill" id="xpFill"></div>
+    </div>
+
+    <div class="xp-text" id="xpText">
+        0/50 XP
+    </div>
+
+    <div class="buttons">
+        <button onclick="addXP(5)">+5 XP</button>
+        <button onclick="addXP(10)">+10 XP</button>
+        <button onclick="addXP(15)">+15 XP</button>
+        <button onclick="addXP(30)">+30 XP</button>
+
+        <button onclick="removeXP(5)">Remover 5 XP</button>
+
+        <button class="danger" onclick="resetProgress()">
+            Resetar Progresso
+        </button>
+    </div>
+
+</div>
+
+<script>
+/*
+    Sistema de XP
+    - Nível 0 começa com 50 XP necessárias
+    - Cada nível exige 25% mais XP
+    - Valores arredondados para múltiplos de 5
+*/
+
+let level = 0;
+let currentXP = 0;
+
+/*
+    Carrega dados salvos
+*/
+function loadData() {
+    const savedLevel = localStorage.getItem("level");
+    const savedXP = localStorage.getItem("currentXP");
+
+    if (savedLevel !== null) level = parseInt(savedLevel);
+    if (savedXP !== null) currentXP = parseInt(savedXP);
+
+    updateUI();
+}
+
+/*
+    Salva dados
+*/
+function saveData() {
+    localStorage.setItem("level", level);
+    localStorage.setItem("currentXP", currentXP);
+}
+
+/*
+    Calcula XP necessária para determinado nível
+*/
+function getRequiredXP(levelNumber) {
+
+    let xp = 50;
+
+    for (let i = 0; i < levelNumber; i++) {
+        xp *= 1.25;
+
+        // arredonda para múltiplo de 5
+        xp = Math.round(xp / 5) * 5;
+    }
+
+    return xp;
+}
+
+/*
+    Atualiza interface
+*/
+function updateUI() {
+
+    const requiredXP = getRequiredXP(level);
+
+    document.getElementById("level").textContent =
+        `Nível ${level}`;
+
+    document.getElementById("xpText").textContent =
+        `${currentXP}/${requiredXP} XP`;
+
+    const percentage =
+        (currentXP / requiredXP) * 100;
+
+    document.getElementById("xpFill").style.width =
+        `${Math.min(percentage, 100)}%`;
+
+    saveData();
+}
+
+/*
+    Adiciona XP
+*/
+function addXP(amount) {
+
+    currentXP += amount;
+
+    // sobe níveis automaticamente
+    while (currentXP >= getRequiredXP(level)) {
+
+        currentXP -= getRequiredXP(level);
+        level++;
+    }
+
+    updateUI();
+}
+
+/*
+    Remove XP
+*/
+function removeXP(amount) {
+
+    currentXP -= amount;
+
+    if (currentXP < 0) {
+        currentXP = 0;
+    }
+
+    updateUI();
+}
+
+/*
+    Reinicia progresso
+*/
+function resetProgress() {
+
+    if (confirm("Deseja realmente resetar o progresso?")) {
+
+        level = 0;
+        currentXP = 0;
+
+        localStorage.removeItem("level");
+        localStorage.removeItem("currentXP");
+
+        updateUI();
+    }
+}
+
+/*
+    Inicialização
+*/
+loadData();
+</script>
+
+</body>
+</html>
